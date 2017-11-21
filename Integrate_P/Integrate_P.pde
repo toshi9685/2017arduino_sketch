@@ -6,6 +6,11 @@ int CX=250, CY=250;
 int green, red, blue;
 int high, low;
 float direction_G;
+
+int count = 0;
+float ac_xyz = 0;
+float V = 0;
+float dx = 0;
 int[] sensors = new int[5];
 int[] sensors_p = new int[5];
 
@@ -16,15 +21,14 @@ void setup() {
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
   //port = new Serial(this, "/dev/cu.usbserial-A90174UN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
-  zoneNumber = 0;
 }
 
 void draw() {
 
   background(255);
-  DrawCommonInfo();
-  DrawZoneTask();
-  DrawZoneNumber();
+  DrawCommonInfo();//共通情報の描画
+  DrawZoneTask();//各ゾーンで描画や処理が必要な時
+  DrawZoneNumber();//ゾーンナンバーを視覚化
   /*
   noStroke();  fill(255);  rect(0,0,1000,500);
    // Draw Acceleration vector
@@ -54,8 +58,8 @@ void DrawCommonInfo() {
   textSize(25);
   fill(0);
 
-  text("zone= ", width*0.55, height*0.1);
-  text("mode= ", width*0.55, height*0.2);
+  text("zoneNumber= ", width*0.47, height*0.1);
+  text("mode= ", width*0.55, height*0.15);
   text("Direction =", width*0.65, height*0.05);
   text("RGB= ", width*0.65, height*0.1);
   text("(geomag_X,geomag_Y,geomag_Z)= ", width*0.65, height*0.2);
@@ -63,7 +67,7 @@ void DrawCommonInfo() {
   text("motorspeed(L,R)=", width*0.65, height*0.4);
 
   text((int)zoneNumber, width*0.55 + 100, height*0.1);
-  text((int)mode, width*0.55 + 100, height*0.2);
+  text((int)mode, width*0.55 + 100, height*0.15);
 
   text(direction_G, width*0.65 +140, height*0.05);
   text("("+red+",", width*0.65 +80, height*0.1);
@@ -84,14 +88,28 @@ void DrawCommonInfo() {
 
 void DrawZoneTask() {
   //ゾーンの描画
-
-  //各ゾーンタスクで必要な描画
+  if(zoneNumber != 4){
+    strokeWeight(10);
+    stroke(0);
+    fill(0);
+    line(width*0.6,height*0.35,width*0.6,height*0.95);
+    line(width*0.6-20,height*0.35,width*0.6-20,height*0.95);
+    line(width*0.1,height*0.35,width*0.6,height*0.35);
+    line(width*0.1,height*0.95,width*0.6,height*0.95);
+    line(width*0.1,height*0.35,width*0.1,height*0.95);
+    stroke(0,0,0);
+    line(width*0.6-10,height*0.35,width*0.6-10,height*0.95);
+    stroke(256,256,0);
+    line(width*0.1+10,height*0.35,width*0.1+10,height*0.95);
+  }
+  //各ゾーンタスクで必要な描画、処理
   switch(zoneNumber) {
   case 1://linetrace
     break;
   case 2://carling
     break;
   case 3://hillclimbing
+    CalcDisp();
     break;
   case 4://winning
     break;
@@ -101,6 +119,7 @@ void DrawZoneTask() {
 }
 
 void DrawZoneNumber(){
+  strokeWeight(2);
   stroke(0);
   fill(0);
   line(width*0.1, height*0.28, width*0.5, height*0.28);
@@ -113,12 +132,16 @@ void DrawZoneNumber(){
   line(width*0.1, height*0.01, width*0.3, height*0.01);
   switch(zoneNumber){
     case 1:
+      DrawStar(10,20,width*0.45,height*0.23);
     break;
     case 2:
+      DrawStar(10,20,width*0.35,height*0.23);
     break;
     case 3:
+      DrawStar(10,20,width*0.2,height*0.23);
     break;
     case 4:
+      DrawStar(10,20,width*0.2,height*0.05);
     break;
     default:
       DrawStar(10,20,width*0.55,height*0.23);
@@ -126,7 +149,7 @@ void DrawZoneNumber(){
   }
 }
 
-void DrawStar(int R,int R_out,int C_x,int C_y){
+void DrawStar(int R,int R_out,float C_x,float C_y){
   //R中心から頂点までの距離（半径）,R_out中心から棘までの距離（半径）,C_x中心座標x,C_y中心座標y
   int vertex_num = 10;//頂点数*2
   int R_in = R_out/2;//中心から谷までの距離（半径）
@@ -150,6 +173,19 @@ void DrawStar(int R,int R_out,int C_x,int C_y){
   endShape(CLOSE);
   popMatrix();
 }
+
+void CalcDisp(){
+  count++;
+  
+  if(count%10 != 0){
+    ac_xyz += sqrt(accel_X*accel_X + accel_Y*accel_Y + accel_Z*accel_Z);
+  }else{
+    ac_xyz = ac_xyz/10;
+    V = ac_xyz/6 + V;
+    dx = V/6 + ac_xyz/2*36;
+  }
+}
+
 void line3D(float x0, float y0, float z0, float x1, float y1, float z1) {
   float X0 = CX+y0-0.5*x0, Y0 = CY + 1.7320508*x0/2-z0;
   float X1 = CX+y1-0.5*x1, Y1 = CY + 1.7320508*x1/2-z1;
