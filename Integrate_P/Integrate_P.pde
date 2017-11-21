@@ -184,6 +184,7 @@ void CalcDisp(){
     V = ac_xyz/6 + V;
     dx = V/6 + ac_xyz/2*36;
   }
+  print("ac_xyz = ");print(ac_xyz);print(" V = ");print(V);print(" dx = ");println(dx);
 }
 
 void line3D(float x0, float y0, float z0, float x1, float y1, float z1) {

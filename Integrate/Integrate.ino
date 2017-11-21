@@ -103,27 +103,28 @@ void sendData()
     inByte = 1;
 
     Serial.write('H');
-    /*
-    Serial.write(dataR_max >> 8);
-    Serial.write(dataR_max & 255);
-    Serial.write(dataG_max >> 8);
-    Serial.write(dataG_max & 255);
-    Serial.write(dataB_max >> 8);
-    Serial.write(dataB_max & 255);
-    Serial.write(dataR_min >> 8);
-    Serial.write(dataR_min & 255);
-    Serial.write(dataG_min >> 8);
-    Serial.write(dataG_min & 255);
-    Serial.write(dataB_min >> 8);
-    Serial.write(dataB_min & 255);
-    */
-    //sendcolor();
-    Serial.write(zoneNumber_G);
-    Serial.write(mode_G);
     Serial.write((int)red_G );
     Serial.write((int)green_G );
     Serial.write((int)blue_G );
-    
+    Serial.write(compass.m.x >> 8);
+    Serial.write(compass.m.x & 255);
+    Serial.write(compass.m.y >> 8);
+    Serial.write(compass.m.y & 255);
+    Serial.write(compass.m.z >> 8);
+    Serial.write(compass.m.z & 255);
+    Serial.write(compass.a.x >> 8);
+    Serial.write(compass.a.x & 255);
+    Serial.write(compass.a.y >> 8);
+    Serial.write(compass.a.y & 255);
+    Serial.write(compass.a.z >> 8);
+    Serial.write(compass.a.z & 255);
+    Serial.write(motorR_G >> 8);
+    Serial.write(motorR_G & 255);
+    Serial.write(motorL_G >> 8);
+    Serial.write(motorL_G & 255);
+    Serial.write(0);
+    Serial.write(zoneNumber_G);
+    Serial.write(mode_G);
     Serial.write((int)(100 * direction_G) >> 8); // 100倍して整数化(小数点2位まで送信)
     Serial.write((int)(100 * direction_G) & 255); // 整数化した時の値が-32768~32767の範囲
     timePrev = timeNow_G;
