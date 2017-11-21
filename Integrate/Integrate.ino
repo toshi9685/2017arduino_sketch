@@ -124,12 +124,6 @@ void sendData()
     Serial.write((int)green_G );
     Serial.write((int)blue_G );
     
-    b_G = direction_G;
-    c_G = direction_G;
-    Serial.write(b_G >> 8); // 値の範囲が0~65535の場合
-    Serial.write(b_G & 255);
-    Serial.write(c_G >> 8); // 値の範囲が-32768~32767の場合
-    Serial.write(c_G & 255);
     Serial.write((int)(100 * direction_G) >> 8); // 100倍して整数化(小数点2位まで送信)
     Serial.write((int)(100 * direction_G) & 255); // 整数化した時の値が-32768~32767の範囲
     timePrev = timeNow_G;
