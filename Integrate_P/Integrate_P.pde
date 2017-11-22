@@ -1,16 +1,15 @@
 
 import processing.serial.*;
 Serial port; 
-int zoneNumber, mode, sonic, motor_L, motor_R, accel_X, accel_Y, accel_Z, geomag_X, geomag_Y, geomag_Z;
+int zoneNumber = 3, mode, sonic, motor_L, motor_R, accel_X, accel_Y, accel_Z, geomag_X, geomag_Y, geomag_Z;
 int CX=250, CY=250;
 int green, red, blue;
 int high, low;
 float direction_G;
 
 int count = 0;
-float ac_xyz = 0;
-float V = 0;
-float dx = 0;
+
+float avex = 0;
 int[] sensors = new int[5];
 int[] sensors_p = new int[5];
 
@@ -20,7 +19,7 @@ void setup() {
   println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  //port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
 }
 
 void draw() {
@@ -58,32 +57,21 @@ void DrawCommonInfo() {
   textSize(25);
   fill(0);
 
-  text("zoneNumber= ", width*0.47, height*0.1);
-  text("mode= ", width*0.54, height*0.15);
-  text("Direction =", width*0.65, height*0.05);
+  text("zoneNumber= "+(int)zoneNumber, width*0.47, height*0.1);
+  text("mode= "+(int)mode, width*0.54, height*0.15);
+  text("Direction ="+direction_G, width*0.65, height*0.05);
   text("RGB= ", width*0.65, height*0.1);
   text("(geomag_X,geomag_Y,geomag_Z)= ", width*0.65, height*0.2);
   text("(accel_X,accel_Y,accel_Z)= ", width*0.65, height*0.3);
   text("motorspeed(L,R)=", width*0.65, height*0.4);
 
-  text((int)zoneNumber, width*0.55 + 100, height*0.1);
-  text((int)mode, width*0.55 + 100, height*0.15);
-
-  text(direction_G, width*0.65 +140, height*0.05);
-  text("("+red+",", width*0.65 +80, height*0.1);
-  text(green+",", width*0.65 +135, height*0.1);
-  text(blue+")", width*0.65 +190, height*0.1);
+  text("("+red+","+green+","+blue+")", width*0.65 +80, height*0.1);
   fill(red, green, blue);
   rect(width*0.65, height*0.1 + 5, 300, 50);
   fill(0);
-  text("("+geomag_X+",", width*0.65, height*0.25);
-  text(geomag_Y+",", width*0.65 +120, height*0.25);
-  text(geomag_Z+")", width*0.65 +240, height*0.25);
-  text("("+accel_X+",", width*0.65, height*0.35);
-  text(accel_Y+",", width*0.65 +120, height*0.35);
-  text(accel_Z+")", width*0.65 +240, height*0.35);
-  text("("+motor_L+",", width*0.65, height*0.45);
-  text(motor_R+")", width*0.65 +120, height*0.45);
+  text("("+geomag_X+","+geomag_Y+","+geomag_Z+")", width*0.65, height*0.25);
+  text("("+accel_X+","+accel_Y+","+accel_Z+")", width*0.65, height*0.35);
+  text("("+motor_L+","+motor_R+")", width*0.65, height*0.45);
 }
 
 void DrawZoneTask() {
@@ -97,18 +85,23 @@ void DrawZoneTask() {
     line(width*0.1,height*0.35,width*0.6,height*0.35);
     line(width*0.1,height*0.95,width*0.6,height*0.95);
     line(width*0.1,height*0.35,width*0.1,height*0.95);
-    stroke(0,0,0);
-    line(width*0.6-10,height*0.35,width*0.6-10,height*0.95);
+    
     stroke(256,256,0);
     line(width*0.1+10,height*0.35,width*0.1+10,height*0.95);
   }
   //各ゾーンタスクで必要な描画、処理
   switch(zoneNumber) {
   case 1://linetrace
+    stroke(84, 179, 89);
+    line(width*0.6-10,height*0.35,width*0.6-10,height*0.95);
     break;
   case 2://carling
+    stroke(183, 40, 24);
+    line(width*0.6-10,height*0.35,width*0.6-10,height*0.95);
     break;
   case 3://hillclimbing
+    stroke(12, 33, 104);
+    line(width*0.6-10,height*0.35,width*0.6-10,height*0.95);
     CalcDisp();
     break;
   case 4://winning
@@ -176,18 +169,10 @@ void DrawStar(int R,int R_out,float C_x,float C_y){
 
 void CalcDisp(){
   count++;
-  
-  if(count%10 != 0){
-    ac_xyz += sqrt(accel_X*accel_X + accel_Y*accel_Y + accel_Z*accel_Z);
-  }else{
-    ac_xyz = ac_xyz/10;
-    V = ac_xyz/6 + V;
-    dx = V/6 + ac_xyz/2*36;
-  }
-  fill(255);
+  stroke(0, 0, 0);
+  fill(0);
   ellipse(width*0.6,height*0.65,10,10);
-  print("ac_xyz = ");print(ac_xyz);print(" V = ");print(V);print(" dx = ");println(dx);
-  text("ac_xyz="+ac_xyz+",V="+V+",dx="+dx, width*0.65, height*0.9);
+  text("avex="+avex, width*0.65, height*0.9);
 }
 
 void line3D(float x0, float y0, float z0, float x1, float y1, float z1) {
@@ -254,7 +239,7 @@ void serialEvent(Serial p) {
       mode =  p.read();
       //方角
       direction_G = (float)read2byte(p) / 100.0; // もともと100倍して送られていたので戻す
-
+      if(zoneNumber == 3)avex = read2byte(p);
       p.clear(); // 念のためクリア
       p.write("A");
       //コンソールに表示
@@ -270,6 +255,10 @@ void serialEvent(Serial p) {
       println(zoneNumber);
       print("タスクナンバー = ");
       println(mode);
+      print("方角 = ");
+      println(direction_G);
+      print("avex = ");
+      println(avex);
     }
   }
 }
