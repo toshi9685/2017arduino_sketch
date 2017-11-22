@@ -66,11 +66,11 @@ int dataR_max, dataG_max, dataB_max;
 void  calibrationColorSensorManual()
 {
   dataR_min = 1280;
-  dataG_min = 2568;
-  dataB_min = 1536;
-  dataR_max = 16128;
-  dataG_max = 26376;
-  dataB_max = 16384;
+  dataG_min = 2658;
+  dataB_min = 1792;
+  dataR_max = 10607;
+  dataG_max = 17302;
+  dataB_max = 11148;
 }
 
 void  calibrationColorSensorWhite()

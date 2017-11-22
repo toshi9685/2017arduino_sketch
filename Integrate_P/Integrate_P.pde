@@ -20,7 +20,7 @@ void setup() {
   println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  //port = new Serial(this, "/dev/cu.usbserial-A90174UN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
 }
 
 void draw() {
@@ -59,7 +59,7 @@ void DrawCommonInfo() {
   fill(0);
 
   text("zoneNumber= ", width*0.47, height*0.1);
-  text("mode= ", width*0.55, height*0.15);
+  text("mode= ", width*0.54, height*0.15);
   text("Direction =", width*0.65, height*0.05);
   text("RGB= ", width*0.65, height*0.1);
   text("(geomag_X,geomag_Y,geomag_Z)= ", width*0.65, height*0.2);
@@ -184,7 +184,10 @@ void CalcDisp(){
     V = ac_xyz/6 + V;
     dx = V/6 + ac_xyz/2*36;
   }
+  fill(255);
+  ellipse(width*0.6,height*0.65,10,10);
   print("ac_xyz = ");print(ac_xyz);print(" V = ");print(V);print(" dx = ");println(dx);
+  text("ac_xyz="+ac_xyz+",V="+V+",dx="+dx, width*0.65, height*0.9);
 }
 
 void line3D(float x0, float y0, float z0, float x1, float y1, float z1) {
@@ -213,6 +216,15 @@ void drawVec(float x, float y, float z) {
   text(z, CX+80, 490);
 }
 
+int read2byte(Serial p) {
+  int x = p.read();  
+  x <<= 8;   
+  x |= p.read();
+  if (x>32757) 
+    x -= 65536;
+  return x;
+}
+
 // 通信方式1
 void serialEvent(Serial p) { 
 
@@ -224,52 +236,16 @@ void serialEvent(Serial p) {
       green = p.read();
       blue =  p.read();
       //地磁気
-      high = p.read();
-      low = p.read();
-      int d = (high << 8 ) + low;
-      if ( 32767 < d )
-        d -= 65536;
-      geomag_X = d;
-      high = p.read();
-      low = p.read();
-      d = (high << 8 ) + low;
-      if ( 32767 < d )
-        d -= 65536;
-      geomag_Y = d;
-      high = p.read();
-      low = p.read();
-      d = (high << 8 ) + low;
-      if ( 32767 < d )
-        d -= 65536;
-      geomag_Z = d;
+      geomag_X = read2byte(p);
+      geomag_Y = read2byte(p);
+      geomag_Z = read2byte(p);
       //加速度
-      high = p.read();
-      low = p.read();
-      int ac = (high << 8 ) + low;
-      if ( 32767 < ac )
-        ac -= 65536;
-      accel_X = ac;
-      high = p.read();
-      low = p.read();
-      ac = (high << 8 ) + low;
-      if ( 32767 < ac )
-        ac -= 65536;
-      accel_Y = ac;
-      high = p.read();
-      low = p.read();
-      ac = (high << 8 ) + low;
-      if ( 32767 < ac )
-        ac -= 65536;
-      accel_Z = ac;
+      accel_X = read2byte(p);
+      accel_Y = read2byte(p);
+      accel_Z = read2byte(p);
       //motorspeed
-      high = p.read();
-      low = p.read();
-      int sp = (high << 8 ) + low;
-      motor_R = sp;
-      high = p.read();
-      low = p.read();
-      sp = (high << 8 ) + low;
-      motor_L = sp;
+      motor_R = read2byte(p);
+      motor_L = read2byte(p);
       //超音波
       sonic = p.read();
       //ゾーンナンバー
@@ -277,12 +253,7 @@ void serialEvent(Serial p) {
       //ゾーンタスク
       mode =  p.read();
       //方角
-      high = p.read();
-      low = p.read();
-      d = (high << 8 ) + low;
-      if ( 32767 < d )
-        d -= 65536;
-      direction_G = (float)d / 100.0; // もともと100倍して送られていたので戻す
+      direction_G = (float)read2byte(p) / 100.0; // もともと100倍して送られていたので戻す
 
       p.clear(); // 念のためクリア
       p.write("A");

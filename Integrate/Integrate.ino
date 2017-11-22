@@ -25,17 +25,17 @@ void setup()
 
   button.waitForButton();
   setupColorSensor(); // カラーセンサーのsetup
-  calibrationColorSensorWhite(); // カラーセンサーのキャリブレーション
-  button.waitForButton();
-  calibrationColorSensorBlack(); // カラーセンサーのキャリブレーション
-  //calibrationColorSensorManual(); // カラーセンサーのキャリブレーション（手動設定）
+  //calibrationColorSensorWhite(); // カラーセンサーのキャリブレーション
+  //button.waitForButton();
+  //calibrationColorSensorBlack(); // カラーセンサーのキャリブレーション
+  calibrationColorSensorManual(); // カラーセンサーのキャリブレーション（手動設定）
 
   setupCompass(); // 地磁気センサーのsetup
   calibrationCompass(); // 地磁気センサーのキャリブレーション
   // calibrationCompassManual(); // 地磁気センサーのキャリブレーション（手動設定）
 
-  zoneNumber_G = 1;
-  mode_G = 3; // スタート時はzoneToZoneの途中から
+  zoneNumber_G = 0;
+  mode_G = 2; // スタート時はzoneToZoneの途中から
   
   button.waitForButton();
   timeInit_G = millis();
@@ -58,7 +58,7 @@ void loop()
     delay(100);
   }
 
-  timerCount();//タイマー60s
+  //timerCount();//タイマー60s
   
   switch ( zoneNumber_G ) {
     case 0:
