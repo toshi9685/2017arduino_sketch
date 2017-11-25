@@ -14,9 +14,8 @@ int zoneNumber_G; // ゾーン番号を表す状態変数
 int mode_G; // 各ゾーンでのモードを表す状態変数
 unsigned long timeInit_G, timeNow_G, timeZonestart_G; //  スタート時間，経過時間
 int motorR_G, motorL_G;  // 左右のZumoのモータに与える回転力unsigned long timePrev = 0;
-float direction_G;//座標
-int c_G; // -32768~32767の範囲の整数(2バイト)
-unsigned int b_G; // 0~65535の範囲の整数(2バイト)
+float direction_G;//方角
+float avex_G;
 
 void setup()
 {
@@ -48,7 +47,6 @@ void loop()
   direction_G = averageHeadingLP();//現在位置 12.2課題1
   timeNow_G = millis() - timeInit_G; // 経過時間
   motors.setSpeeds(motorL_G, motorR_G); // 左右モーターへの回転力入力
-  //motors.setSpeeds(0,0);//左右のモーターの回転を止める
   sendData(); // データ送信
 
   if ( button.isPressed() ) { // Zumo button が押されていればtrue，そうでなければ false
@@ -91,42 +89,44 @@ void timerCount() {
     delay(100);
   }
 }
+
+void write2byte(int x) {
+  Serial.write(x>>8);
+  Serial.write(x&255);
+}
+
 // 通信方式２
 void sendData()
 {
   static unsigned long timePrev = 0;
   static int inByte = 0;
-
+  
   // 50msごとにデータ送信（通信方式２），500msデータ送信要求なし-->データ送信．
   if ( inByte == 0 || timeNow_G - timePrev > 500 || (Serial.available() > 0 && timeNow_G - timePrev > 50)) { // 50msごとにデータ送信
     inByte = Serial.read();
     inByte = 1;
-
+    float mx,my,mz;
+    
     Serial.write('H');
     Serial.write((int)red_G );
     Serial.write((int)green_G );
     Serial.write((int)blue_G );
-    Serial.write(compass.m.x >> 8);
-    Serial.write(compass.m.x & 255);
-    Serial.write(compass.m.y >> 8);
-    Serial.write(compass.m.y & 255);
-    Serial.write(compass.m.z >> 8);
-    Serial.write(compass.m.z & 255);
-    Serial.write(compass.a.x >> 8);
-    Serial.write(compass.a.x & 255);
-    Serial.write(compass.a.y >> 8);
-    Serial.write(compass.a.y & 255);
-    Serial.write(compass.a.z >> 8);
-    Serial.write(compass.a.z & 255);
-    Serial.write(motorR_G >> 8);
-    Serial.write(motorR_G & 255);
-    Serial.write(motorL_G >> 8);
-    Serial.write(motorL_G & 255);
+    mx = map(compass.m.x,compass.m_min.x,compass.m_max.x,-100,100);
+    my = map(compass.m.y,compass.m_min.y,compass.m_max.y,-100,100);
+    mz = map(compass.m.z,compass.m_min.z,compass.m_max.z,-100,100);
+    write2byte((int)mx);  
+    write2byte((int)my);  
+    write2byte((int)mz);
+    write2byte(compass.a.x);  
+    write2byte(compass.a.y);  
+    write2byte(compass.a.z);
+    write2byte(motorR_G);
+    write2byte(motorL_G);
     Serial.write(0);
     Serial.write(zoneNumber_G);
     Serial.write(mode_G);
-    Serial.write((int)(100 * direction_G) >> 8); // 100倍して整数化(小数点2位まで送信)
-    Serial.write((int)(100 * direction_G) & 255); // 整数化した時の値が-32768~32767の範囲
+    write2byte((int)(100 * direction_G));
+    if(zoneNumber_G == 3)write2byte(avex_G);
     timePrev = timeNow_G;
   }
 }
