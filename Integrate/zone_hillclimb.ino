@@ -37,8 +37,8 @@ void zone3beta()
         pretime = timeZonestart_G
       }
       speed0 = 150;
-      //diff = -0.02 * compass.a.y; //p-制御(最急勾配方向へ)
-      diff = -0.02 * (compass.a.x + compass.a.y);
+      diff = -0.02 * compass.a.y; //p-制御(最急勾配方向へ)
+      //diff = -0.02 * (compass.a.x + compass.a.y);
       break;
     case 2://山腹探索
       
