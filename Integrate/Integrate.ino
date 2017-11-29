@@ -17,6 +17,7 @@ int motorR_G, motorL_G;  // 左右のZumoのモータに与える回転力unsign
 float direction_G;//方角
 float avex_G;
 
+
 void setup()
 {
   Serial.begin(9600);

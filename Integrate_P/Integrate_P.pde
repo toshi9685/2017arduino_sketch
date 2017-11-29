@@ -19,7 +19,7 @@ void setup() {
   println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  //port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
 }
 
 void draw() {
@@ -213,7 +213,7 @@ int read2byte(Serial p) {
 // 通信方式1
 void serialEvent(Serial p) { 
 
-  if ( p.available() >= 22 ) { 
+  if ( p.available() >= 27 ) { 
     if ( p.read() == 'H' ) {
 
       //RGB値
