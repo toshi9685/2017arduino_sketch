@@ -34,7 +34,7 @@ void zoneToZone()
       goStraight( SPEED );
       if ( identifyColor( 251, 236, 81 ) ) { // 黄を検知
         mode_G = 3;
-      }else if ( identifyColor( 0, 0, 0 ) ) { // 黒を検知//課題2
+      }else if ( identifyColor( 0, 0, 0 ) ) { // 黒を検知
         mode_G = 5;
       }
       break;
@@ -56,29 +56,8 @@ void zoneToZone()
         timeZonestart_G = millis();
       }
       break;
-    case 5://黒を脱却するまで回転//課題3
-    /*
-      turnRight( SPEED );
-      if (identifyColor( 255, 255, 255 )) {
-        mode_G = 2;
-      }
-      */
-      //課題4
-      
-      if(turnTimes <= 2){
-        turnRight(SPEED);
-      }else if(turnTimes > 2){
-        turnRight(-SPEED);
-      }
-      if (identifyColor( 255, 255, 255 ) || identifyColor( 251, 236, 81 )) {
-        goStraight( SPEED );
-        mode_G = 2;
-        turnTimes = 0;
-      }
-      if(steadyState(50) == 1){
-        turnTimes++;
-      }
-      
+    case 5://黒を脱却するまで回転
+      BreakBLine(2);
       break;
     default:
       break;
@@ -150,8 +129,43 @@ int identifyColor( int red, int green, int blue )
   else
     return 0;
 }
+//黒ラインから脱出するまで回転
+void BreakBLine(int z){
+  static int turnTimes = 0;
+   if(turnTimes <= 2){
+        turnRight(SPEED);
+      }else if(turnTimes > 2){
+        turnRight(-SPEED);
+      }
+      if (identifyColor( 250, 250, 250 ) || identifyColor( 251, 236, 81 )) {
+        goStraight( SPEED );
+        mode_G = z;
+        turnTimes = 0;
+        steadyState(0);
+      }
+      if(steadyState(50) == 1){
+        turnTimes++;
+      }
+}
+//指定した時間が経ったか判定
+int steadyState( unsigned long period )
+{
+  static int flagStart = 0; // 0:待ち状態，1:現在計測中
+  static unsigned long startTime = 0;
 
+  if ( flagStart == 0 ) {
+    startTime = timeNow_G;
+    flagStart = 1; // 現在計測中にしておく
+  }
 
+  if ( timeNow_G - startTime > period ) { // 計測開始からの経過時間が指定時間を越えた
+    flagStart = 0; // 待ち状態に戻しておく
+    startTime = 0; // なくても良いが，形式的に初期化
+    return 1;
+  }
+  else
+    return 0;
+}
 
 
 

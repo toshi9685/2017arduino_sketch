@@ -182,21 +182,4 @@ void zone()
   }
   }
 */
-int steadyState( unsigned long period )
-{
-  static int flagStart = 0; // 0:待ち状態，1:現在計測中
-  static unsigned long startTime = 0;
 
-  if ( flagStart == 0 ) {
-    startTime = timeNow_G;
-    flagStart = 1; // 現在計測中にしておく
-  }
-
-  if ( timeNow_G - startTime > period ) { // 計測開始からの経過時間が指定時間を越えた
-    flagStart = 0; // 待ち状態に戻しておく
-    startTime = 0; // なくても良いが，形式的に初期化
-    return 1;
-  }
-  else
-    return 0;
-}

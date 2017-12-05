@@ -1,12 +1,11 @@
 float avex = 0;
-int mount = 1;//0:青,1:赤
+int mount = 0;//探索する色　0:青,1:赤
 int action[] = {5, 2};//mode
-int escape[] = {0,180};//山からの脱出方向 赤が北側青が南側を想定
+int escape[] = {0, 180}; //山からの脱出方向 青が北側、赤が南側を想定
 const int buzzerPin = 3;
-float sum_e = 0;
 int target = 1500;
 float Kp = 0.02, Ki = 0.02;
-unsigned long pretime;
+
 
 float turnTo(float dir) {
   float heading, diff;
@@ -22,8 +21,9 @@ float turnTo(float dir) {
 }
 void zone3beta()
 {
-  static int countTurn = 0;
   static int entryAngle = 0;
+  static float sum_e = 100;
+  static unsigned long pretime = 0;
   int done;
   float speed0, diff, e = 0;
 
@@ -31,7 +31,7 @@ void zone3beta()
   avex_G = avex;
   switch (mode_G) {
     case 0://setup
-      countTurn = 0; mode_G = 1;
+      mode_G = 1;
       break;
     case 1://山探し
       if (avex > 4000) { //登り始めたらmode2,5へ
@@ -41,6 +41,9 @@ void zone3beta()
         } else {
           entryAngle = direction_G - 180;
         }
+      }
+      if ( identifyColor( 0, 0, 0 ) ) { // 黒を検知
+        mode_G = 20;
       }
       speed0 = 200;
       diff = -0.02 * compass.a.y; //p-制御(最急勾配方向へ)
@@ -74,7 +77,7 @@ void zone3beta()
         /*
           //PI制御
           e = target-avex;//目標との差
-          sum_e += e * (millis() - pretime)/1000;//積分
+          sum_e += e * (millis() - pretime) / 1000;//積分
           diff = Kp*e + Ki*sum_e;//diffの決定
           pretime = millis();
         */
@@ -99,21 +102,17 @@ void zone3beta()
       break;
     case 6://青のスポットを探す
       if (identifyZone() == 3) {
-        tone(buzzerPin, 440);
-        if (steadyState(500) == 1) {
-          noTone(buzzerPin);
-          mode_G = 7;
-          mount = 1;
-        }
+        mode_G = 10;
+        mount = 1;
       } else {
         mode_G = 7;
         mount = 0;
       }
       break;
     case 7://停止下山方向
-      
+
       speed0 = 0;
-      diff = turnTo(escape[mount]); //p-制御
+      diff = turnTo(escape[mount] - 20); //p-制御
       if (abs(diff) <= 50) {
         mode_G = 8;
       }
@@ -130,15 +129,6 @@ void zone3beta()
       //斜面に向かって斜め右を向くように降りる.
       diff = 0.02 * (compass.a.x + compass.a.y);//斜め降り
       //diff = -0.02 * (compass.a.x + compass.a.y);//斜め登り
-
-      //PI制御
-      /*
-        e = target-compass.a.x;
-        sum_e += e * (millis() - pretime)/1000;//積分
-        diff = Kp*e + Ki*sum_e;
-        pretime = millis();
-      */
-
       if ((avex < 1500) && (avex > -1500)) { //下山したら一旦止まる.zoneToZone()に移行する.
         speed0 = 0;
         diff = 0;
@@ -147,12 +137,22 @@ void zone3beta()
       }
 
       break;
-    case 10:
+    case 10://ブザー鳴らす
       tone(buzzerPin, 440);
       if (steadyState(500) == 1) {
         noTone(buzzerPin);
         mode_G = 7;
       }
+      break;
+    case 11://山間の移動
+      //改めて向きを変える
+      diff = turnTo(escape[mount]); //p-制御
+      if (abs(diff) <= 50) {
+        mode_G = 0;
+      }
+      break;
+    case 20://黒を脱却するまで回転
+      BreakBLine(0);
       break;
     default:
       break;
