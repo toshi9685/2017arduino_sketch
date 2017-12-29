@@ -52,14 +52,15 @@ void  calibrationCompass()
   compass.m_max.y = running_max.y;
   compass.m_min.x = running_min.x;
   compass.m_min.y = running_min.y;
+
 }
 
 void CalibrationCompassManual()
 {
-  compass.m_min.x = 0;
-  compass.m_min.y = 0;
-  compass.m_max.x = 0;
-  compass.m_max.y = 0;
+  compass.m_min.x = -3788;
+  compass.m_min.y = -525;
+  compass.m_max.x = -917;
+  compass.m_max.y = 2849;
 }
 
 template <typename T> float heading(LSM303::vector<T> v)
@@ -95,14 +96,14 @@ float averageHeading()
     0, 0, 0
   };
 
-  for (int i = 0; i < 10; i ++)
+  for (int i = 0; i < 20; i ++)
   {
     compass.read();
     avg.x += compass.m.x;
     avg.y += compass.m.y;
   }
-  avg.x /= 10.0;
-  avg.y /= 10.0;
+  avg.x /= 20.0;
+  avg.y /= 20.0;
 
   // avg is the average measure of the magnetic vector.
   return heading(avg);
@@ -116,29 +117,11 @@ float averageHeadingLP()
 
   compass.read();
   avg.x = 0.2 * compass.m.x + 0.8 * avg.x;
-  avg.y = 0.2 * compass.m.y + 0.8 * avg.y ;
-  compass_value();
+  avg.y = 0.2 * compass.m.y + 0.8 * avg.y;
+
 
   // avg is the average measure of the magnetic vector.
   return heading(avg);
-}
-
-/*Zumoが引数で指定した方向(0~360度)を向いていれば1を,
- そうでなければ0を返す.方向は磁北を0度として0~360度で表す(時計回りが正方向)*/
-int targetDirection( int direction_target )
-{
-  float direction_diff;
-  direction_diff = direction_G - direction_target; // ターゲット方向からの差異 (direction_G の値は loop() 関数で取得)
-  // direction_diff の値は-360~360(度)の範囲を取り得るが，-180~180(度)の範囲 に変換したい.
-  if ( direction_diff > 180.0 )
-    direction_diff -= 360.0;
-  else if ( direction_diff < -180.0 )
-    direction_diff += 360.0;
-  // この時点でdirection_diff の値は-180~180(度)になっている. 
-  if ( fabs(direction_diff) < 5.0 ) // 5.0はパラメーター
-    return 1;
-  else
-    return 0;
 }
 
 float compass_value()
@@ -151,3 +134,4 @@ float compass_value()
   // avg is the average measure of the magnetic vector.
   return heading(direction_V);
 }
+

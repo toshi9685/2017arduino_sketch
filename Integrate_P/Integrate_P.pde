@@ -19,7 +19,7 @@ void setup() {
   println(Serial.list());
   // String arduinoPort = Serial.list()[1];
   // port = new Serial(this, arduinoPort, 9600 );
-  port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
+  port = new Serial(this, "/dev/cu.usbserial-A90174GY", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
 }
 
 void draw() {

@@ -9,8 +9,8 @@ int action[] = {5, 2};//mode
 //int escape[] = {260, 50}; //山からの脱出方向
 int escape[] = {230, 50}; //山からの脱出方向
 const int buzzerPin = 3;
-//int target = 1500;
-//float Kp = 0.01, Ki = 0.02;
+int target = 1500;
+float Kp = 0.01, Ki = 0.02;
 
 
 float turnTo(float dir) {
@@ -63,7 +63,7 @@ void zone3beta()
       //diff = -0.02 * (compass.a.x + compass.a.y);
       break;
     case 2://中腹まで前進
-      if (steadyState(1000) == 1) { //3秒後(mode 3)へ
+      if (steadyState(1000) == 1) { //秒後(mode 3)へ
         speed0 = 0;
         diff = 0;
         mode_G = 3;
@@ -81,8 +81,9 @@ void zone3beta()
         entryAngle = direction_G;
       } else {
         speed0 = 200;
-        diff = -0.02 * (compass.a.x + 0.5 * compass.a.y); //山腹周回
-        if (identifyColor(183, 40, 24) == 1) {
+        //diff = -0.02 * (compass.a.x + 0.5 * compass.a.y); //山腹周回時計回り
+        diff = -0.02 * (compass.a.x + 0.5 * -compass.a.y); //山腹周回反時計回り
+        if (identifyColor_wide(183, 40, 24 , 60) == 1) {
           mount = 0;
           mode_G = 10;
           nowcolor_G = 1;//赤
@@ -112,7 +113,7 @@ void zone3beta()
 
       break;
     case 6://青のスポットを探す
-      if (identifyColor(12, 33, 104) == 1) {
+      if (identifyColor_wide(12, 33, 104 , 60) == 1) {
         mode_G = 10;
         mount = 1;
         nowcolor_G = 0;//青

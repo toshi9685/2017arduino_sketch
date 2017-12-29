@@ -6,11 +6,11 @@ float avex = 0, avey = 0;
 static int count = 0;
 static int mount = 0;//探索する色　0:青,1:赤
 int action[] = {5, 2};//mode
-//int escape[] = {260, 50}; //山からの脱出方向
-int escape[] = {230, 50}; //山からの脱出方向
+int escape[] = {260, 50}; //山からの脱出方向
+//int escape[] = {230, 50}; //山からの脱出方向
 const int buzzerPin = 3;
-//int target = 1500;
-//float Kp = 0.01, Ki = 0.02;
+int target = 1500;
+float Kp = 0.01, Ki = 0.02;
 
 
 float turnTo(float dir) {
@@ -49,7 +49,7 @@ void zone3beta()
           entryAngle = direction_G - 180;
         }
       }
-      if ( identifyColor( 0, 0, 0 ) ) { // 黒を検知
+      if ( identifyColor_wide( 0, 0, 0 ,60) ) { // 黒を検知
         if (0 <= direction_G && direction_G <= 280) {
           entryAngle = direction_G;
         } else {
@@ -82,7 +82,7 @@ void zone3beta()
       } else {
         speed0 = 200;
         diff = -0.02 * (compass.a.x + 0.5 * compass.a.y); //山腹周回
-        if (identifyColor(183, 40, 24) == 1) {
+        if (identifyColor_wide(183, 40, 24,60) == 1) {
           mount = 0;
           mode_G = 10;
           nowcolor_G = 1;//赤
@@ -112,7 +112,7 @@ void zone3beta()
 
       break;
     case 6://青のスポットを探す
-      if (identifyColor(12, 33, 104) == 1) {
+      if (identifyColor_wide(12, 33, 104,60) == 1) {
         mode_G = 10;
         mount = 1;
         nowcolor_G = 0;//青
