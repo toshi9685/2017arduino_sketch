@@ -1,11 +1,3 @@
-/*
-
-  カーリングプログラムに自己位置推定を追加
-  カーリングプログラムのコースアウトを実装
-  ウィンイングアクションを実装
-
-*/
-
 #include <Wire.h>
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
@@ -15,7 +7,7 @@ ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON);
 LSM303 compass;
 
-#define SPEED 180 // Zumoのモータに与える回転力の基準値 
+#define SPEED 200 // Zumoのモータに与える回転力の基準値 
 
 float red_G, green_G, blue_G; // カラーセンサーで読み取ったRGB値（0-255）
 int zoneNumber_G; // ゾーン番号を表す状態変数
@@ -48,8 +40,8 @@ void setup()
   calibrationCompass(); // 地磁気センサーのキャリブレーション
   //CalibrationCompassManual(); // 地磁気センサーのキャリブレーション（手動設定）
 
-  zoneNumber_G = 3;
-  mode_G = 0; // スタート時はzoneToZoneの途中から
+  zoneNumber_G = 0;
+  mode_G = 0; // スタート時
   button.waitForButton();
   timeInit_G = millis();
   time_Zonestart_G = millis();
@@ -69,54 +61,21 @@ void loop()
 
   if ( button.isPressed() ) { // Zumo button が押されていればtrue，そうでなければ false
     zoneNumber_G = 0; // zoneToZone に移行
-    mode_G = 2;
+    mode_G = 0;
     delay(100);
   }
-
-  timerCount();//タイマー60s
-
   switch ( zoneNumber_G ) {
     case 0:
-      zoneToZone(); // zone to zone (start to zone)
+      zoneNumber_G = kenchi(); // zone to zone (start to zone)
       break;
     case 1:
-      zone_figure_trace(); // zone 1
-      break;
-    case 2:
-      zone_curling(); // zone 2
-      break;
-    case 3:
-      zone_hillclimb(); // zone 3
-      break;
-    case 4:
-      winning_action(); // winning action
+      zone_winningacton(); // zone 1
       break;
     default:
       break;
   }
 
 }
-
-void timerCount() {
-  if (timeNow_G - time_Zonestart_G >= 48000 && nowcolor_G == 1&& zoneNumber_G == 3) { //60s経過
-    zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
-    mode_G = 0;
-    time_Zonestart_G = timeNow_G;
-  }
-
-  if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 2) {
-    //zoneNumber_G = 0;
-    mode_G = 88;
-    time_Zonestart_G = timeNow_G;
-  }
-
-  if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 1) {
-    zoneNumber_G = 0;
-    mode_G = 0;
-    time_Zonestart_G = timeNow_G;
-  }
-}
-
 
 // 通信方式２
 void sendData()
@@ -131,7 +90,7 @@ void sendData()
   if ( inByte == 0 || timeNow_G - timePrev > 500 || (Serial.available() > 0 && timeNow_G - timePrev > 50)) { // 50msごとにデータ送信
     inByte = Serial.read();
     inByte = 1;
-   
+
     send_time = ( unsigned int )((timeNow_G - time_Zonestart_G));
 
     Serial.write('H');
@@ -167,5 +126,66 @@ void write2byte(int x) {
   Serial.write(x & 255);
 }
 
+int kenchi() {
+  if (distance < 10) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
+void zone_winningacton() {
+  switch (mode_G) {
+    case 0:
+      turnRight(SPEED);
+      if (steadyState(100))mode_G = 1;
+      break;
+    case 1:
+      turnRight(-SPEED);
+      if (steadyState(200))mode_G = 2;
+      break;
+    case 2:
+      turnRight(SPEED);
+      if (steadyState(300))mode_G = 3;
+      break;
+    case 3:
+      turnRight(-SPEED);
+      if (steadyState(100))mode_G = 0;
+      break;
+    default:
+      break;
+  }
+}
 
+int steadyState( unsigned long period )
+{
+  static int flagStart = 0; // 0:待ち状態，1:現在計測中
+  static unsigned long startTime = 0;
+
+  if ( flagStart == 0 ) {
+    startTime = timeNow_G;
+    flagStart = 1; // 現在計測中にしておく
+  }
+
+  if ( timeNow_G - startTime > period ) { // 計測開始からの経過時間が指定時間を越えた
+    flagStart = 0; // 待ち状態に戻しておく
+    startTime = 0; // なくても良いが，形式的に初期化
+    return 1;
+  }
+  else
+    return 0;
+}
+
+// 右回転（負の値は左回転）
+void turnRight( int speed )
+{
+  motorL_G = speed;
+  motorR_G = -speed;
+}
+
+// 直進
+void goStraight( int speed )
+{
+  motorL_G = speed;
+  motorR_G = speed;
+}

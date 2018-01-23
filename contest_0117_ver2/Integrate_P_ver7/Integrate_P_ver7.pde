@@ -3,85 +3,88 @@ import processing.serial.*;
 Serial port; 
 float sonic, motor_L, motor_R, accel_X, accel_Y, accel_Z, geomag_X, geomag_Y, geomag_Z, direction;
 int zoneNumber, mode, hcolor;
-int green, red, blue, green_p, red_p, blue_p;
+int green, red, blue;
 int high, low;
 int a, c;
 int b;
-float time, x, y;
+float time, x, y, Theta;
 float x_Prev, y_Prev;
 
 float theta, psi, phi;
 int arfa, diff;
 float Mu_x;
+static float prev_time = 0;
+int stone_count, prev_mode;
 
-int dfc,preframe = -3000;//drawfindcolor
+float map_x;
+float map_y;
+float map_px;
+float map_py;
+
+int dfc, preframe = -180,cnum[]=new int[2];//drawfindcolor
+boolean Fflag=false;//drawfindcolor
+
 
 void setup() {
   //frame.setLocation(0, 500);
+  //size(1024, 768, P3D);
   size(1024, 768, P3D);
   PFont font;//①変数fontがフォント変数であると定義
   font = createFont("MS Gothic", 48, true);//ＭＳ明朝 「MS Mincho」
   textFont(font);//③フォント，サイズを指定する
+
   background(255);
   println(Serial.list());
   //String arduinoPort = Serial.list()[1];
   //port = new Serial(this, arduinoPort, 9600 );
   //port = new Serial(this, "COM4", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
-  port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 );
-  zoneNumber = 3;
+  zoneNumber = 3;//テスト用
   mode = 0;
-  red_p = 0; 
-  green_p = 0; 
-  blue_p = 0;
+
   arfa = 100;
   diff = 0;
-  motor_L = 0;
-  motor_R = 0;
+  motor_L = 110;
+  motor_R = 100;
   red = 255;
   Mu_x = 0;
   direction = 30;
-  sonic = 40;
-  //左上
-  /*
-  accel_X = 15959;
-  accel_Y = 7226;
-  accel_Z = 15959;
-  geomag_X = 950;
-  geomag_Y = 1474;
-  geomag_Z = -12701;
-  */
-    //後上
-  /*
-  accel_X = 14938;
-  accel_Y = -341;
-  accel_Z = 14938;
-  geomag_X = 475;
-  geomag_Y = 1361;
-  geomag_Z = -12625;
-  */
-  //前上
-  
-  accel_X = 14991;
-  accel_Y = 92;
-  accel_Z = 14991;
-  geomag_X = 433;
-  geomag_Y = 869;
-  geomag_Z = -12677;
-  
+  sonic = 50;
+  x = 00;
+  y = 30;
+  stone_count = 0;
+  accel_X = 100;
+  accel_Y = 16100;
+  accel_Z = 1400;
+  geomag_X = 99;
+  geomag_Y = 0;
+  geomag_Z = 0;
 }
 
 void draw() {
-
-/*
-  テスト
-*/
-
   if (zoneNumber == 3) {
+    //テスト
+    if (frameCount%60 == 0) {
+      mode++;
+      if (mode == 15) {
+        mode = 0;
+        hcolor += 1;
+        hcolor=hcolor%2;
+      }
+    }
+    //テスト
     hint(ENABLE_DEPTH_SORT); // ←追加
-    //get_Euler();
-    Draw_3d();
+    //draw_3d();
+    aaaaaa();
     Draw_findcolor();
   }
+
+  /*
+  if (zoneNumber == 0) {
+   hint(ENABLE_DEPTH_SORT); // ←追加
+   get_Euler();
+   Draw_3d();
+   }
+   */
   hint(DISABLE_DEPTH_SORT);
   fill(255);
   stroke(255);
@@ -91,20 +94,21 @@ void draw() {
   Draw_compass();
   Draw_color();
   if (zoneNumber == 2) {
-    zone_task();
+    //zone_task();
+    zone_curling();
   }
   if (zoneNumber == 1) {
-    //suitei();
+    suitei();
     zone_zukei();
   }
-  stroke(150, 150, 150);
+  stroke(100, 100, 100);
   strokeWeight(1);
-  line(0, height*0.46, width, height*0.46);
-  line(width * 0.55, 0, width * 0.55, height*0.46);
-
+  line(0, height*0.44, width, height*0.44);
+  line(width * 0.535, 0, width * 0.535, height*0.44);
+  line(0, height - 20, width, height - 20);
 
   /*
-   print("theta : ");
+  print("theta : ");
    println(theta * 180 / 3.14159265);
    print("psi : ");
    println(psi * 180 / 3.14159265);
@@ -128,20 +132,25 @@ void serialEvent(Serial p) {
   if ( p.available() >= 31 ) { 
     if ( p.read() == 'H' ) {
 
-      red_p = red;
-      green_p = green;
-      blue_p = blue;
       //RGB値
       red =  p.read();
       green = p.read();
       blue =  p.read();
       //地磁気
+      //geomag_X = 0.9 * geomag_X + 0.1 * read2byte(p);
+      //geomag_Y = 0.9 * geomag_Y + 0.1 * read2byte(p);
+      //geomag_Z = 0.9 * geomag_Z + 0.1 * read2byte(p);
+
       geomag_X = read2byte(p);
       geomag_Y = read2byte(p);
       geomag_Z = read2byte(p);
 
-
       //加速度
+      //accel_X = 0.9 * accel_X + 0.1 * read2byte(p);
+      //accel_Y = 0.9 * accel_Y + 0.1 * read2byte(p);
+      //accel_Z = 0.9 * accel_Z + 0.1 * read2byte(p);
+
+
       accel_X = read2byte(p);
       accel_Y = read2byte(p);
       accel_Z = read2byte(p);
@@ -157,7 +166,11 @@ void serialEvent(Serial p) {
       zoneNumber = p.read();
 
       //ゾーンタスク
+      prev_mode = mode;
       mode =  p.read();
+      if (zoneNumber == 2 && mode == 10 && prev_mode == 9) {
+        stone_count++;
+      }
 
       //方角
       direction = read2byte(p);
@@ -177,13 +190,13 @@ void serialEvent(Serial p) {
 
       p.clear(); // 念のためクリア
       p.write("A");
-      
+
       //print("  RGB = ");
       // println(red, green, blue);
-       print("(geomag_X,geomag_Y,geomag_Z) = ");
-       println(geomag_X, geomag_Y, geomag_Z);
-       print("(accel_X,accel_Y,accel_Z) = ");
-       println(accel_Z, accel_Y, accel_Z);
+      // print("(geomag_X,geomag_Y,geomag_Z) = ");
+      // println(geomag_X, geomag_Y, geomag_Z);
+      // print("(accel_X,accel_Y,accel_Z) = ");
+      // println(accel_Z, accel_Y, accel_Z);
       // print("motorspeed =(L,R)");
       // println(motor_L, motor_R);
       // print("距離");
@@ -192,22 +205,21 @@ void serialEvent(Serial p) {
       // println(zoneNumber);
       // print("タスクナンバー = ");
       // println(mode);
-       print("方角 = ");
-       println(direction);
-       
+      //print("方角 = ");
+      //println(direction);
+
       // print("theta : ");
       // println(theta * 180 / 3.14159265);
       // print("psi : ");
       // println(psi * 180 / 3.14159265);
       // print("phi : ");
       // println(phi  * 180 / 3.14159265);
-       
-      /*
-      print("x = ");
-      println(x);
-      print("y = ");
-      println(y);
-      */
+
+
+      //print("x = ");
+      //println(x);
+      //print("y = ");
+      //println(y);
     }
   }
 }
@@ -230,22 +242,33 @@ void get_Euler() {
   Normaliz_my = geomag_Y / Size_m;
   Normaliz_mz = geomag_Z / Size_m;
 
+
+  println(Normaliz_ax);
+  println(Normaliz_ay);
+  //println(Normaliz_az);
+  //println(Normaliz_mx);
+  //println(Normaliz_my);
+  //println(Normaliz_mz);
+
+
   cos_theta = Normaliz_az;
   sin_theta = Math.signum(Normaliz_ay) * sqrt(1 - pow(Normaliz_az, 2));
   theta = atan2(sin_theta, cos_theta);
 
-  if (abs(sin_theta) < 0.5) {
-    //println("aaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    psi = atan2(-Normaliz_my, Normaliz_mx);
+  if (abs(sin_theta) < 0.2) {
+    println("aaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    //psi = atan2(-Normaliz_my, Normaliz_mx);
+    psi = direction * 3.14 / 180;
   } else {
     sin_psi = Normaliz_ax / sin_theta;
     cos_psi = Normaliz_ay / sin_theta;
-
+    println("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
     psi = atan2(sin_psi, cos_psi);
     //println("psi : "  + psi * 180 / 3.14);
+    phi = 0;
   }
 
-  if (abs(accel_X) < 200 && abs(accel_Y) < 200) {
+  if (abs(accel_X) < 100 && abs(accel_Y) < 100) {
     m0_x = geomag_X;
     m0_y = geomag_Y;
     m0_z = geomag_Z;
@@ -274,35 +297,6 @@ void get_Euler() {
    */
 }
 
-void Draw_findcolor(){
-  fill(0);
-  textSize(34);
-  
-  if(mode == 10 || frameCount < preframe+180){
-    preframe = frameCount;
-    text("発見!!", width*0.3, height * 0.6);
-    fill(red,green,blue);
-    print("発見中");
-  }else{
-    if(dfc==0){
-      text("探索中", width*0.3, height * 0.6);
-    }else if(dfc == 1){
-      text("探索中、", width*0.3, height * 0.6);
-    }else if(dfc == 2){
-      text("探索中、、", width*0.3, height * 0.6);
-    }else if(dfc == 3){
-      text("探索中、、、", width*0.3, height * 0.6);
-    }
-    if(frameCount%60 == 0){
-      dfc++;
-      if(dfc==4)dfc=0;
-    }
-    
-    fill(0,0,0);
-  }
-  rect(width*0.3-50,height * 0.6+50,200,200);
-}
-
 void Draw_map() {
   float zone_pos[][] = {
     {0, 0, 0, 0}, 
@@ -314,7 +308,7 @@ void Draw_map() {
   stroke(0);
   strokeWeight(1);
   pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
-  scale(0.92, 0.92);
+  scale(0.90, 0.90);
   fill(0);
   rect(30, 10, 150, 130);
   fill(255);
@@ -352,7 +346,7 @@ void Draw_map() {
 
   if (zoneNumber != 0) {
     fill(255, 0, 255, arfa);
-    rect(zone_pos[zoneNumber][0]  * 0.92, zone_pos[zoneNumber][1]  * 0.92, zone_pos[zoneNumber][2] * 0.92, zone_pos[zoneNumber][3] * 0.92);
+    rect(zone_pos[zoneNumber][0]  * 0.90, zone_pos[zoneNumber][1]  * 0.9, zone_pos[zoneNumber][2] * 0.9, zone_pos[zoneNumber][3] * 0.9);
     if (arfa >= 100) {
       diff = -2;
     } else if (arfa <= 10) {
@@ -363,7 +357,7 @@ void Draw_map() {
 
   stroke(255);
   fill(255);
-  rect(0, height * 0.45 -60, 300, 50);
+  //rect(0, height * 0.45 -60, 200, 50);
 
   fill(0);
   textSize(34);
@@ -387,7 +381,7 @@ void Draw_speed() {
   right_x = -cos(right_theta) * 85 + 350;
   right_y = sin(right_theta) * 85 + 110; 
   pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
-  translate(width * 0.55, 0);
+  translate(width * 0.535, 0);
   stroke(0);
   fill(255, 255, 255);
   strokeWeight(1);
@@ -419,10 +413,9 @@ void Draw_speed() {
   rect(10, 120, 450, 30);
   textSize(22);
   fill(0);
-  text("motor_L = ", 30, 145);
-  text(motor_L, 150, 145);
-  text("motor_R = ", 260, 145);
-  text(motor_R, 380, 145);
+  text("motor_L = " + motor_L, 30, 145);
+
+  text("motor_R = " + motor_R, 260, 145);
 
   textSize(15);
   text(0, 115, 15);
@@ -436,7 +429,7 @@ void Draw_speed() {
   text(100, 395, 28);
   text(200, 426, 60);
 
-
+  // 適応変換
   popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
 }
 
@@ -455,7 +448,6 @@ void Draw_3d() {
 
   background(255);
 
-
   // x軸を示す赤色の線
   stroke(255, 0, 0);
   line(0, 0, 0, 200, 0, 0);
@@ -465,79 +457,18 @@ void Draw_3d() {
   // x軸を示す青色の線
   stroke(0, 0, 255);
   line(0, 0, 0, 0, 0, 200);
-  
-  // calculation of rotation matrix
-  float a = sqrt(accel_X*accel_X+accel_Y*accel_Y+accel_Z*accel_Z);
-  float m = sqrt(geomag_X*geomag_X+geomag_Y*geomag_Y+geomag_Z*geomag_Z);
 
-  float hx = geomag_Y*accel_Z - geomag_Z*accel_Y;
-  float hy = geomag_Z*accel_X - geomag_X*accel_Z;
-  float hz = geomag_X*accel_Y - geomag_Y*accel_X;
-  float h = sqrt(hx*hx + hy*hy + hz*hz);
 
-  float rx = accel_Y*hz - accel_Z*hy;
-  float ry = accel_Z*hx - accel_X*hz;
-  float rz = accel_X*hy - accel_Y*hx;
-  float r = sqrt(rx*rx + ry*ry + rz*rz);
-  
-  // display heading info in degrees
-  float head = atan2(hx/h, rx/r);
-  text(int(degrees(head)), 100,70);
-  
-  // display data using vector
-  translate(200,80);
-  fill(63,127,255);
-  beginShape();
-  vertex(0,0,0);
-  vertex(0,10,0);
-  vertex(x/a*20, y/a*20, accel_Z/a*20);
-  endShape(CLOSE);
-
-  /*fill(255,127,63);
-  beginShape();
-  vertex(0,0,0);
-  vertex(0,10,0);
-  vertex(geomag_X/m*20, geomag_Y/m*20, geomag_Z/m*20);
-  endShape(CLOSE);
-  */
-  translate(-200,-80);
-  /*
-  rotateX(radians(90)); // move Z-axis up
-  rotateZ(radians(90)); // move X-axis front
-  */
-  // rotate by the matrix
-  applyMatrix(hx/h, hy/h, hz/h, 0.0,
-              -rx/r, -ry/r, -rz/r, 0.0,
-              accel_X/a,  accel_Y/a,  accel_Z/a,  0.0,
-              0.0,  0.0,  0.0,  1.0);
-
-  //rotateX(atan(accel_X/sqrt(accel_Y*accel_Y+accel_Z*accel_Z)));
-  //rotateX(atan(accel_Y/sqrt(accel_X*accel_X+accel_Z*accel_Z)));
-  //rotateX(atan(accel_Z/sqrt(accel_X*accel_X+accel_Y*accel_Y)));
   //rotateX(-theta);
-  //rotateY(atan(accel_Y/sqrt(accel_X*accel_X+accel_Z*accel_Z)));
-  //rotateY(-direction*PI/180);
-  //rotateY(psi);
-  //rotateZ(atan(sqrt(accel_Y*accel_Y+accel_X*accel_X)/accel_Z));
-  //rotateZ(-phi);
+  rotateY(-psi);
+  //rotateY(direction * 3.14 / 180);
+  //rotateY(-phi);
 
-// Draw board
-  scale(3.0);
-  fill(255,63,63);
-  box(50, 50, 10);
-  translate(0,0,5);
-  fill(0,0,0);
-  box(10, 10, 3);
-  translate(0,0,-5);
-  translate(28,0,0);
-  fill(255,0,0);
-  box(4,10,10);
-  
+
   fill(255, 255, 255);
-/*
+
   scale(100);    //拡大
   beginShape(QUADS);
-
 
   //正面
   stroke(0, 0, 0);
@@ -579,14 +510,15 @@ void Draw_3d() {
   vertex(-1, -1, 1);
 
   endShape();
-*/
+
   popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
 }
 
 
 void Draw_compass() {
   pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
-  translate(width * 0.65, height * 0.30);
+  scale(0.93);
+  translate(width * 0.68, height * 0.32);
   stroke(0);
   fill(187, 255, 255);
   ellipse(0, 0, 155, 155);
@@ -687,7 +619,7 @@ void zone_task() {
   translate(0., height * 0.46);
   fill(205);
   stroke(255);
-  rect(0., 0 , width , height * 0.54);
+  rect(0., 0, width, height * 0.54);
 
   fill(245);
   stroke(255);
@@ -705,13 +637,14 @@ void zone_task() {
     ellipse(0, 0, 120 * i, 120 * i);
   }
 
-  fill(255, 0, 0);
+
   stroke(0);
   strokeWeight(1);
   rotate(radians(direction));
+  fill(0, 255, 0);
   triangle(-10, 5, 0, -15, 10, 5);
-  fill(0, 0, 255, 255);
-  ellipse(0, -map_distance, 8, 8);
+  fill(255, 0, 0);
+  ellipse(0, -map_distance, 10, 10);
 
   //sonic -= 0.2;
   //direction += 1.0;
@@ -720,22 +653,62 @@ void zone_task() {
 }
 
 
+
+
+
+
 void zone_zukei() {
 
 
   pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
-  translate(0., height * 0.46);
 
 
+  /*
+  fill(255);
+   stroke(0, 0, 0);
+   strokeWeight(10);
+   rect(300, 15, 400, 380);
+   */
+  /*  stroke(0, 0, 0);
+   strokeWeight(10);
+   line(300, 15, 300, 395);
+   line(300, 15, 700, 15);
+   line(300, 395, 700, 395);
+   line(700, 15, 700, 395);
+   */
 
-
-  stroke(255, 0, 0);
-  fill(255, 0, 0);
-  //ellipse(x + 500, y + 200, 6, 6);
-  strokeWeight(3);
-  if (x != 0 && x_Prev != 0 ) {
-    line(x + 500, y + 200, x_Prev + 500, y_Prev + 200);
+  //トレースした線の色
+  if (mode == 1) {//白色(確認のため黒にしておく)
+    stroke(255, 255, 255, 255);
+    fill(255, 255, 255, 255);
+  } else if (mode == 3) {//赤色
+    stroke(255, 0, 0);
+    //fill(255, 0, 0);
+  } else if (mode == 4) {//青色
+    stroke(0, 0, 255);
+    //fill(0, 0, 255);
+  } else if (mode == 5) {//緑色
+    stroke(0, 255, 0);
+    //fill(0, 255, 0);
+  } else if (mode == 6) {//ピンク色
+    stroke(255, 182, 193);
+    //fill(181, 83, 64);
   }
+
+  //ellipse(x + 500, y + 200, 6, 6);
+  strokeWeight(5);
+  translate(0, 384);
+  if (x != 0 && x_Prev != 0 ) {
+    map_x = map(x, -10, 150, 155, 340);
+    map_y = map(y, 20, -150, 140, 325);
+    map_px = map(x_Prev, -10, 155, 150, 340);
+    map_py = map(y_Prev, 20, -150, 140, 325);
+    line(map_x+300, map_y+240, map_px+300, map_py+240);
+
+    //point(map_x+300, map_y+240);
+    //line(x + 300, y + 307, x_Prev + 300, y_Prev + 307);
+  }
+
   fill(245);
   stroke(255);
   strokeWeight(1);
@@ -752,4 +725,426 @@ void zone_zukei() {
   y_Prev = y;
 
   popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+}
+
+
+void zone_curling() {
+  //x += 0.2;
+
+  float map_distance;
+  float distance;
+  float zumo_x, zumo_y;
+
+  map_distance = map(sonic, 0, 80, 0, 360);
+  zumo_x = map(x, 200, -80, 0, 427.5);
+  zumo_y = map(y, 0, 280, 370, 10);
+  distance = map(sonic, 0, 100, 0, 500);
+
+  pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
+  translate(0, height * 0.44);
+  fill(255);
+  stroke(255);
+  rect(0., 0, width, height * 0.56);
+
+  textSize(30);
+  fill(0);
+
+  text("X:" + x + "  Y:" + y, 10, 300);
+  text("確保したストーン数 : " + stone_count, 10, 370);
+
+  if (0 < sonic) {
+    fill(0, 255, 0, 200);
+    rect( 10, 80, distance, 70);
+    fill(0);
+    text("ストーンまでの距離 " + sonic + " cm", 10, 50);
+  } else {
+    fill(0);
+    text("ストーン探索中、、、 ", 10, 50);
+  }
+  stroke(0);
+  strokeWeight(3);
+  noFill();
+  rect( 10, 80, 500, 70);  
+
+
+  textSize(20);
+  fill(0);
+  text(0, 7, 175);
+  for (int i = 1; i <= 100; i++) {
+    if (i % 10 == 0) {
+      strokeWeight(2);
+      line(5 * i + 10, 127, 5 * i + 10, 150);
+      textSize(20);
+      fill(0);
+      text(i, 5 * i, 175);
+    } else if (i % 5 == 0) {
+      strokeWeight(2);
+      line(5 * i + 10, 135, 5 * i + 10, 150);
+    } else {
+      strokeWeight(1);
+      line(5 * i + 10, 140, 5 * i + 10, 150);
+    }
+  }
+
+
+
+
+  translate(550, 5);
+
+
+  strokeWeight(1);
+  fill(0);
+  noStroke();
+  rect(0, 0, 447.5, 390);
+  fill(255);
+  rect(10, 10, 427.5, 370);
+  fill(0, 255, 0);
+  stroke(0);
+  rect(0, 390, 447.5, 10);
+  fill(255, 255, 0);
+  rect(10, 10, 427.5, 10);
+
+  translate(223.75, 200);
+
+  noFill();
+
+  //strokeWeight(8);
+  fill(0, 0, 255);
+  noStroke();
+  ellipse(0, 0, 270, 270);
+  fill(255);
+  ellipse(0, 0, 255, 255);
+  fill(255, 0, 0);
+  ellipse(0, 0, 135, 135);
+  fill(255);
+  ellipse(0, 0, 120, 120);
+
+  translate(-223.75, -200);
+
+  //rotate(radians(direction));
+  fill(255, 0, 0);
+  stroke(0);
+  strokeWeight(2);
+  //popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+  //pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
+  translate(zumo_x + 10, zumo_y + 20);
+  rotate(radians(direction - 90));
+  //triangle(-15, 20, 15, 20, 0, -20);
+  beginShape();
+  vertex(0, -25);
+  vertex(-20, 25);
+  vertex(0, 10);
+  vertex(20, 25);
+
+  endShape(CLOSE);
+
+  fill(0, 255, 0);
+  ellipse(0, -map_distance, 30, 30);
+
+
+  popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+}
+
+
+void suitei() {
+  float omega, speed, p, kakudo;
+  float dt = 0.002;
+  float now_time;
+
+  now_time = millis();
+  if (now_time - prev_time > 2000) {
+    println("OJ");
+    prev_time = now_time;
+    motor_L = (int)(Math.random()*100 + 80);
+    motor_R = (int)(Math.random()*100 + 80);
+  }
+
+  speed = (motor_L * dt + motor_R * dt) / 2;
+  kakudo = (motor_L * dt - motor_R * dt) / (2 * 6);
+  p = speed / kakudo;
+
+  //x = x + speed * cos(Theta + (kakudo / 2));
+  //y = y + speed * sin(Theta + (kakudo / 2));
+
+  x = x + (2 * p * sin(kakudo)) * cos(Theta + (kakudo / 2));
+  y = y + (2 * p * sin(kakudo)) * sin(Theta + (kakudo / 2));
+  Theta = Theta + kakudo;
+
+  //println(p);
+  //println("kakudo : " + kakudo / 3.14 * 180);
+  //println("Theta : " + Theta / 3.14 * 180);
+}
+
+
+void draw_3d() {
+  pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
+  /*
+  camera(250.0, -300.0, 1000.0, // 視点X, 視点Y, 視点Z
+   -500.0, -200.0, 0.0, // 中心点X, 中心点Y, 中心点Z
+   0.0, 1.0, 0.0); // 天地X, 天地Y, 天地Z
+   */
+  background(255);
+
+  float a = sqrt(pow(accel_X, 2) + pow(accel_Y, 2) + pow(accel_Z, 2));
+  float m = sqrt(pow(geomag_X, 2) + pow(geomag_Y, 2) + pow(geomag_Z, 2));
+
+  float hx = geomag_Y * accel_Z - geomag_Z * accel_Y;
+  float hy = geomag_Z * accel_X - geomag_X * accel_Z;
+  float hz = geomag_X * accel_Y - geomag_Y * accel_X;
+  float h = sqrt(hx*hx + hy*hy + hz*hz);
+
+  float rx = accel_Y * hz - accel_Z * hy; 
+  float ry = accel_Z * hx - accel_X * hz;
+  float rz = accel_X * hy - accel_Y * hx;
+  float r = sqrt(rx*rx + ry*ry + rz*rz);
+
+  applyMatrix(hx/h, hy/h, hz/h, 0.0, 
+    -rx/r, -ry/r, -rz/r, 0.0, 
+    accel_X/a, accel_Y/a, accel_Z/a, 0.0, 
+    0.0, 0.0, 0.0, 1.0);
+
+  fill(255, 255, 255);
+
+  scale(100);    //拡大
+  beginShape(QUADS);
+
+  //正面
+  stroke(0, 0, 0);
+  strokeWeight(0.02);
+  fill(255, 0, 0, 70);
+  vertex(-1, 1, 1);
+  vertex( 1, 1, 1);
+  vertex( 1, -1, 1);
+  vertex(-1, -1, 1);
+  //右
+  fill(128, 128, 128, 50);
+  vertex( 1, 1, 1);
+  vertex( 1, 1, -1);
+  vertex( 1, -1, -1);
+  vertex( 1, -1, 1);
+  //後ろ
+  fill(0, 0, 255, 50); 
+  vertex( 1, 1, -1);
+  vertex(-1, 1, -1);
+  vertex(-1, -1, -1);
+  vertex( 1, -1, -1);
+  //左
+  fill(128, 128, 128, 50);
+  vertex(-1, 1, -1);
+  vertex(-1, 1, 1);
+  vertex(-1, -1, 1);
+  vertex(-1, -1, -1);
+  //下
+  fill(128, 128, 128, 50);
+  vertex(-1, 1, -1);
+  vertex( 1, 1, -1);
+  vertex( 1, 1, 1);
+  vertex(-1, 1, 1);
+  //上
+  fill(128, 128, 128, 50);
+  vertex(-1, -1, -1);
+  vertex( 1, -1, -1);
+  vertex( 1, -1, 1);
+  vertex(-1, -1, 1);
+
+  endShape();
+
+
+
+
+  popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+}
+
+
+void aaaaaa() {
+
+  pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
+  translate(0, height * 0.5);
+  background(255);
+
+  // calculation of rotation matrix
+
+  float a = sqrt(pow(accel_X, 2) + pow(accel_Y, 2) + pow(accel_Z, 2));
+  float m = sqrt(pow(geomag_X, 2) + pow(geomag_Y, 2) + pow(geomag_Z, 2));
+
+  float hx = geomag_Y * accel_Z - geomag_Z * accel_Y;
+  float hy = geomag_Z * accel_X - geomag_X * accel_Z;
+  float hz = geomag_X * accel_Y - geomag_Y * accel_X;
+  float h = sqrt(hx*hx + hy*hy + hz*hz);
+
+  float rx = accel_Y * hz - accel_Z * hy; 
+  float ry = accel_Z * hx - accel_X * hz;
+  float rz = accel_X * hy - accel_Y * hx;
+  float r = sqrt(rx*rx + ry*ry + rz*rz);
+
+  fill(255, 127, 63);
+  // display heading info in degrees
+  float head = atan2(hx/h, rx/r);
+  text(int(degrees(head)), 100, 70);
+
+  fill(63, 127, 255);
+  text(accel_X, 100, 20);
+  text(accel_Y, 200, 20);
+  text(accel_Z, 300, 20);
+
+  fill(255, 127, 63);
+  text(geomag_X, 100, 40);
+  text(geomag_Y, 200, 40);
+  text(geomag_Z, 300, 40);
+  popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+
+
+  pushMatrix(); //(0, 0)を原点とする座標軸をスタックに格納
+  translate(width/2, height/2);
+
+  stroke(255);
+  lights();
+  hint(DISABLE_DEPTH_SORT);
+
+
+
+  // display data using vector
+  translate(200, 80);
+  fill(63, 127, 255);
+  beginShape();
+  vertex(0, 0, 0);
+  vertex(0, 10, 0);
+  vertex(accel_X/a*20, accel_Y/a*20, accel_Z/a*20);
+  endShape(CLOSE);
+
+  fill(255, 127, 63);
+  beginShape();
+  vertex(0, 0, 0);
+  vertex(0, 10, 0);
+  vertex(geomag_X/m*20, geomag_Y/m*20, geomag_Z/m*20);
+  endShape(CLOSE);
+  translate(-200, -80);
+
+  // setup coordinates for board picture
+  translate(width/2 - 300, height/2 - 150);
+  rotateX(radians(90)); // move Z-axis up
+  rotateZ(radians(180)); // move X-axis front
+
+
+  //camera(200.0, -60.0, 250.0, // 視点X, 視点Y, 視点Z
+  //  -50.0, -40.0, 0.0, // 中心点X, 中心点Y, 中心点Z
+  //  0.0, 1.0, 0.0); // 天地X, 天地Y, 天地Z
+
+  // x軸を示す赤色の線
+  stroke(255, 0, 0);
+  line(0, 0, 0, -200, 0, 0);
+  // y軸を示す緑色の線
+  stroke(0, 255, 0);
+  line(0, 0, 0, 0, -200, 0);
+  // z軸を示す青色の線
+  stroke(0, 0, 255);
+  line(0, 0, 0, 0, 0, 200);
+
+
+  hint(ENABLE_DEPTH_SORT); // ←追加
+  // rotate by the matrix
+  applyMatrix(hx/h, hy/h, hz/h, 0.0, 
+    -rx/r, -ry/r, -rz/r, 0.0, 
+    accel_X/a, accel_Y/a, accel_Z/a, 0.0, 
+    0.0, 0.0, 0.0, 1.0);
+
+  // Draw board
+
+  scale(2.0);
+  fill(255, 63, 63, 130);
+  box(50, 50, 10);
+  translate(0, 0, 5);
+  fill(0, 0, 0);
+  box(10, 10, 3);
+  translate(0, 0, -5);
+  translate(28, 0, 0);
+  fill(255, 0, 0);
+  box(4, 10, 10);
+
+  /*
+  scale(60);    //拡大
+   beginShape(QUADS);
+   
+   //正面
+   stroke(0, 0, 0);
+   strokeWeight(0.02);
+   fill(128, 128, 128, 50);
+   vertex(-1, 1, 1);
+   vertex( 1, 1, 1);
+   vertex( 1, -1, 1);
+   vertex(-1, -1, 1);
+   //右
+   fill(255, 0, 0, 128);
+   vertex( 1, 1, 1);
+   vertex( 1, 1, -1);
+   vertex( 1, -1, -1);
+   vertex( 1, -1, 1);
+   //後ろ
+   fill(128, 128, 128, 50); 
+   vertex( 1, 1, -1);
+   vertex(-1, 1, -1);
+   vertex(-1, -1, -1);
+   vertex( 1, -1, -1);
+   //左
+   fill(0, 0, 255, 128);
+   vertex(-1, 1, -1);
+   vertex(-1, 1, 1);
+   vertex(-1, -1, 1);
+   vertex(-1, -1, -1);
+   //下
+   fill(128, 128, 128, 50);
+   vertex(-1, 1, -1);
+   vertex( 1, 1, -1);
+   vertex( 1, 1, 1);
+   vertex(-1, 1, 1);
+   //上
+   fill(128, 128, 128, 50);
+   vertex(-1, -1, -1);
+   vertex( 1, -1, -1);
+   vertex( 1, -1, 1);
+   vertex(-1, -1, 1);
+   
+   endShape();
+   */
+  popMatrix(); //座標軸の位置をスタックから取り出すし設定する ... この場合(0, 0)
+}
+
+void Draw_findcolor() {
+  fill(0);
+  textSize(34);
+
+  text("検出した回数", width*0.4, height * 0.75);
+  text("青:"+cnum[0], width*0.4, height * 0.8);
+  text("赤:"+cnum[1], width*0.4, height * 0.85);
+  if (frameCount < preframe+180) {//180frameの間見つけた色を表示
+    text("発見!!", width*0.2, height * 0.65);
+    if (hcolor==0) {
+      fill(0, 0, 255);
+    } else {
+      fill(255, 0, 0);
+    }
+  } else {//探索中の描画に戻す
+    Fflag=false;
+  }
+  if (mode == 10 && Fflag==false) {//見つけたとき
+    Fflag=true;//見つけたフラグ立てる
+    preframe = frameCount;//そのときのフレームを取得
+    cnum[hcolor] += 1;
+  } else if (Fflag==false) {
+    if (dfc==0) {
+      text("探索中", width*0.2, height * 0.65);
+    } else if (dfc == 1) {
+      text("探索中 .", width*0.2, height * 0.65);
+    } else if (dfc == 2) {
+      text("探索中 . .", width*0.2, height * 0.65);
+    } else if (dfc == 3) {
+      text("探索中 . . .", width*0.2, height * 0.65);
+    }
+    if (frameCount%60 == 0) {
+      dfc++;
+      if (dfc==4)dfc=0;
+    }
+    fill(0, 0, 0);//黒で塗りつぶし
+  }
+  rect(width*0.2-50, height * 0.6+50, 200, 200);
 }

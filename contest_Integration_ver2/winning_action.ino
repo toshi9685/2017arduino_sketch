@@ -8,15 +8,7 @@ void winning_action() {
       mode_G = 1;
       break;
     case 1:
-      tone(buzzer_Pin, famima[step_count]);
-      if (steadyState(370) == 1) {
-        step_count++;
-        if(step_count >= sizeof(famima) / sizeof(famima[0])){
-          step_count = 0;
-          mode_G = 2;
-          noTone(buzzer_Pin);
-        }
-      }
+      turnTo(0);
       break;
   }
 }

@@ -147,7 +147,7 @@ void zone_hillclimb()
 
       break;
     case 10://ブザー鳴らす
-      tone(buzzerPin, 540);
+      tone(buzzerPin, 440);
       if (steadyState(500) == 1) {
         noTone(buzzerPin);
         mode_G = 7;

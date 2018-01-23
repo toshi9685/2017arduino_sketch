@@ -15,7 +15,7 @@ ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON);
 LSM303 compass;
 
-#define SPEED 180 // Zumoのモータに与える回転力の基準値 
+#define SPEED 140 // Zumoのモータに与える回転力の基準値 
 
 float red_G, green_G, blue_G; // カラーセンサーで読み取ったRGB値（0-255）
 int zoneNumber_G; // ゾーン番号を表す状態変数
@@ -48,9 +48,10 @@ void setup()
   calibrationCompass(); // 地磁気センサーのキャリブレーション
   //CalibrationCompassManual(); // 地磁気センサーのキャリブレーション（手動設定）
 
-  zoneNumber_G = 3;
-  mode_G = 0; // スタート時はzoneToZoneの途中から
+  zoneNumber_G = 0;
+  mode_G = 2; // スタート時はzoneToZoneの途中から
   button.waitForButton();
+  setupDistance();
   timeInit_G = millis();
   time_Zonestart_G = millis();
 }
@@ -60,8 +61,6 @@ void loop()
   readRGB(); // カラーセンサでRGB値を取得(0-255)
   timeNow_G = millis(); // 経過時間
   direction_G = compass_value();
-  getDistance();
-  position_estimation(motorL_G , motorR_G);
 
   motors.setSpeeds(motorL_G, motorR_G); // 左右モーターへの回転力入力
   //motors.setSpeeds(0, 0); // 左右モーターへの回転力入力
@@ -80,9 +79,13 @@ void loop()
       zoneToZone(); // zone to zone (start to zone)
       break;
     case 1:
+      position_estimation(motorL_G , motorR_G);
       zone_figure_trace(); // zone 1
       break;
     case 2:
+      //suitei();
+      getDistance();
+      position_estimation(motorL_G , motorR_G);
       zone_curling(); // zone 2
       break;
     case 3:
@@ -98,19 +101,24 @@ void loop()
 }
 
 void timerCount() {
-  if (timeNow_G - time_Zonestart_G >= 48000 && nowcolor_G == 1&& zoneNumber_G == 3) { //60s経過
+  if (timeNow_G - time_Zonestart_G >= 45000 && nowcolor_G == 1 && zoneNumber_G == 3) { //60s経過
     zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
     mode_G = 0;
     time_Zonestart_G = timeNow_G;
+    delay(100);
   }
-
-  if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 2) {
-    //zoneNumber_G = 0;
+  else if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 2) {
+    zoneNumber_G = 0;
     mode_G = 88;
+    //zoneNumber_G = 0;
+    //mode_G = 0;
     time_Zonestart_G = timeNow_G;
+  }/*
+  else if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 2) {
+    mode_G = 12;
   }
-
-  if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 1) {
+*/
+  else if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 1) {
     zoneNumber_G = 0;
     mode_G = 0;
     time_Zonestart_G = timeNow_G;
@@ -131,7 +139,7 @@ void sendData()
   if ( inByte == 0 || timeNow_G - timePrev > 500 || (Serial.available() > 0 && timeNow_G - timePrev > 50)) { // 50msごとにデータ送信
     inByte = Serial.read();
     inByte = 1;
-   
+
     send_time = ( unsigned int )((timeNow_G - time_Zonestart_G));
 
     Serial.write('H');
@@ -157,6 +165,10 @@ void sendData()
 
     write2byte((int)(X));
     write2byte((int)(Y));
+
+    if (zoneNumber_G == 3) {
+      Serial.write(nowcolor_G);
+    }
 
     timePrev = timeNow_G;
   }

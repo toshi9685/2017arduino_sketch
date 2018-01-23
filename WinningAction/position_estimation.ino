@@ -8,10 +8,21 @@ void position_estimation(float V_L , float V_R) {
   static float X1 = 0;  //x方向成分の1つ先
   static float Y1 = 0;  //y方向成分の1つ先
   static float dt = 0.01; //0.1秒ごとに現在位置を更新
+  static float X_Prev = 0;     //過去のX座標
+  static float Y_Prev = 0;     //過去のY座標
+  static float X_Now = 0;   //現在のX座標
+  static float Y_Now = 0;   //現在のY座標
+  static float X_PPrev = 0;
+  static float Y_PPrev = 0;
+  static float count = 0;
 
+  static float X_PPP = 0;
+  static float X_PPPP = 0;
   static unsigned long timePrev2 = 0;
   static bool flag = false;
 
+
+  count++;
 
   if (flag == false) {
     timePrev2 = timeNow_G;

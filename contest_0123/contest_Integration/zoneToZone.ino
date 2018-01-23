@@ -6,7 +6,7 @@ const float color[4][3] = { // 各ゾーン（1-4)の識別色（RGB値）（各
 };
 
 const float direction_exit[3] = { // 各ゾーン(1-3)の脱出方向の角度（各自で設定）
-  90, 90, 220
+  107, 90, 180
 };
 float minDistance; // identifyZone()用のグローバル変数
 static int turn_count = 1;
@@ -60,6 +60,7 @@ void zoneToZone()
         zoneNumber_G = zoneNumber; // 状態変数の更新
         mode_G = 0;                // 状態変数の更新
         zoneNumber_in = zoneNumber; // どのゾーンに入ったのか記録
+        Y = 0;
         time_Zonestart_G = millis();
       }
       break;
@@ -162,14 +163,41 @@ int identifyColor_wide( int red, int green, int blue , float d2_max)
     return 0;
 }
 
+int steadyState( unsigned long period )
+{
+  static int flagStart = 0; // 0:待ち状態，1:現在計測中
+  static unsigned long startTime = 0;
+
+  if ( flagStart == 0 ) { 
+    startTime = timeNow_G;
+    flagStart = 1; // 現在計測中にしておく
+  }
+
+  if ( timeNow_G - startTime > period ) { // 計測開始からの経過時間が指定時間を越えた
+    flagStart = 0; // 待ち状態に戻しておく
+    startTime = 0; // なくても良いが，形式的に初期化
+    return 1;
+  }
+  else
+    return 0;
+}
 
 
-
-
-
-
-
-
+int targetDirection( int direction_target )
+{
+  float direction_diff;
+  direction_diff = direction_G - direction_target; // ターゲット方向からの差異（direction_G の値はloop() 関数で取得）
+  // direction_diff の値は-360～360（度）の範囲を取り得るが，-180～180（度）の範囲に変換したい．
+  if ( direction_diff > 180.0 )
+    direction_diff -= 360.0;
+  else if ( direction_diff < -180.0 )
+    direction_diff += 360.0;
+  // この時点でdirection_diff の値は-180～180（度）になっている．
+  if ( fabs(direction_diff) < 5.0 ) // 5.0 はパラメーター
+    return 1;
+  else
+    return 0;
+}
 
 
 

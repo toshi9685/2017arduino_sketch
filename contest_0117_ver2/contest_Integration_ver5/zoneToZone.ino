@@ -6,7 +6,7 @@ const float color[4][3] = { // 各ゾーン（1-4)の識別色（RGB値）（各
 };
 
 const float direction_exit[3] = { // 各ゾーン(1-3)の脱出方向の角度（各自で設定）
-  107, 107, 26
+  107, 90, 180
 };
 float minDistance; // identifyZone()用のグローバル変数
 static int turn_count = 1;
@@ -19,17 +19,20 @@ void zoneToZone()
   float direction_target;
   static int zoneNumber_in = 0; // ゾーンに入った時のゾーン番号を記録
   int done;
+  static bool exit_flag = false;
 
   switch ( mode_G ) {
     case 0:  // setup（必要がなくても形式的に置いておく）
       mode_G = 1;
       break;
     case 1: // direction_targetの方向を向く
-      direction_target = direction_exit[zoneNumber_in - 1];
-      turnRight(SPEED);
-      if ( turnToDirection( direction_target ) ) {
+      turnRight( SPEED );
+
+      direction_target = direction_exit[ zoneNumber_in - 1 ];
+      if ( turnToDirection( direction_target ) ) { // 各自で作成
         mode_G = 2;
       }
+
 
       break;
 
@@ -57,6 +60,7 @@ void zoneToZone()
         zoneNumber_G = zoneNumber; // 状態変数の更新
         mode_G = 0;                // 状態変数の更新
         zoneNumber_in = zoneNumber; // どのゾーンに入ったのか記録
+        Y = 0;
         time_Zonestart_G = millis();
       }
       break;
@@ -139,7 +143,7 @@ int identifyZone()
 int identifyColor( int red, int green, int blue )
 {
   float d2;
-  float d2_max = 30; // パラメーター
+  float d2_max = 40; // パラメーター
 
   d2 = pow(red - red_G, 2) + pow(green - green_G, 2) + pow(blue - blue_G, 2);
   if ( d2 < d2_max * d2_max )
@@ -159,13 +163,12 @@ int identifyColor_wide( int red, int green, int blue , float d2_max)
     return 0;
 }
 
-
 int steadyState( unsigned long period )
 {
   static int flagStart = 0; // 0:待ち状態，1:現在計測中
   static unsigned long startTime = 0;
 
-  if ( flagStart == 0 ) {
+  if ( flagStart == 0 ) { 
     startTime = timeNow_G;
     flagStart = 1; // 現在計測中にしておく
   }
@@ -178,7 +181,6 @@ int steadyState( unsigned long period )
   else
     return 0;
 }
-
 
 
 int targetDirection( int direction_target )
@@ -196,12 +198,6 @@ int targetDirection( int direction_target )
   else
     return 0;
 }
-
-
-
-
-
-
 
 
 
