@@ -164,10 +164,10 @@ void zone_hillclimb()
       speed0 = 0;
       diff = turnTo(entryAngle + 80); //p-制御
       if (abs(diff) <= 50) {
-        if(!esc){
+        if (!esc) {
           mode_G = 1;
-        }else{
-          mode_G = 30;
+        } else {
+          mode_G = 31;
         }
       }
       break;
@@ -177,6 +177,22 @@ void zone_hillclimb()
       if (steadyState(1500)) {
         mode_G = 0;
       }
+      break;
+    case 30:
+      esc = true;
+      mode_G = 31;
+      break;
+    case 31:
+      if (steadyState(800)) {
+        mode_G = 32;
+      } else {
+        speed0 = 200;
+        diff = 0.02 * (compass.a.x + 0.5 * -compass.a.y); //山腹周回反時計回り
+      }
+      break;
+    case 32:
+      zoneNumber_G = 0;
+      mode_G = 0;
       break;
     default:
       break;

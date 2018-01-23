@@ -5,7 +5,9 @@
   ウィンイングアクションを実装
 
 */
-
+/*
+2018/1/23 変更　timercount
+*/
 #include <Wire.h>
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
@@ -102,8 +104,8 @@ void loop()
 
 void timerCount() {
   if (timeNow_G - time_Zonestart_G >= 45000 && nowcolor_G == 1 && zoneNumber_G == 3) { //60s経過
-    zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
-    mode_G = 0;
+    //zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
+    mode_G = 30;
     time_Zonestart_G = timeNow_G;
     delay(100);
   }
