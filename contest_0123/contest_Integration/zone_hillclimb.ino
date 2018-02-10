@@ -6,7 +6,7 @@ float avex = 0, avey = 0;
 static int count = 0;
 static int mount = 0;//探索する色　0:青,1:赤
 int action[] = {5, 2};//mode
-int escape[] = {245, 40}; //山からの脱出方向
+int escape[] = {245, 50}; //山からの脱出方向
 const int buzzerPin = 3;
 bool esc = false;
 
@@ -75,8 +75,8 @@ void zone_hillclimb()
         diff = 0.02 * (compass.a.x + 0.5 * -compass.a.y); //山腹周回反時計回り
         if (identifyColor_wide(183, 40, 24 , 70) == 1) {
           mount = 0;
-          mode_G = 10;
           nowcolor_G = 1;//赤
+          mode_G = 10;
           steadyState(0);
           entryAngle = direction_G;
         }
@@ -104,9 +104,9 @@ void zone_hillclimb()
       break;
     case 6://青のスポットを探す
       if (identifyColor_wide(12, 33, 104 , 70) == 1) {
+        nowcolor_G = 0;//青
         mode_G = 10;
         mount = 1;
-        nowcolor_G = 0;//青
         steadyState(0);
       } else if (steadyState(300)) {
         mode_G = 7;
@@ -138,11 +138,10 @@ void zone_hillclimb()
       //斜面に向かって斜め右を向くように降りる.
       //diff = 0.02 * (compass.a.x + compass.a.y);//斜め降り
       //diff = -0.02 * (compass.a.x + compass.a.y);//斜め登り
-      if ((avex < 1000) && (avex > -1000) && (avey < 1000) && (avey > -1000) ) { //下山したらmode_G=0.
+      if ((avex < 1500) && (avex > -1500) && (avey < 1500) && (avey > -1500)) { //下山したらmode_G=0.
         speed0 = 0;
         diff = 0;
         mode_G = 0;
-        //zoneNumber_G = 0;
       }
 
       break;
@@ -164,11 +163,7 @@ void zone_hillclimb()
       speed0 = 0;
       diff = turnTo(entryAngle + 80); //p-制御
       if (abs(diff) <= 50) {
-        if (!esc) {
           mode_G = 1;
-        } else {
-          mode_G = 31;
-        }
       }
       break;
     case 25:
@@ -187,7 +182,7 @@ void zone_hillclimb()
         mode_G = 32;
       } else {
         speed0 = 200;
-        diff = 0.02 * (compass.a.x + 0.5 * -compass.a.y); //山腹周回反時計回り
+        diff = 0.02 * (compass.a.x + 0.25 * -compass.a.y); //山腹周回反時計回り
       }
       break;
     case 32:

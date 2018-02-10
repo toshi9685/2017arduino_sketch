@@ -24,12 +24,14 @@ int nowcolor_G = 2;
 static float X = 0;
 static float Y = 0;
 
+int object_count = 0;
+
 void setup()
 {
   Serial.begin(9600);
   Wire.begin();
   setupDistance();
-  button.waitForButton();
+  //button.waitForButton();
   setupColorSensor(); // カラーセンサーのsetup
   //calibrationColorSensorWhite(); // カラーセンサーのキャリブレーション
   //button.waitForButton();
@@ -37,7 +39,7 @@ void setup()
   calibrationColorSensorManual(); // カラーセンサーのキャリブレーション（手動設定）
 
   setupCompass(); // 地磁気センサーのsetup
-  calibrationCompass(); // 地磁気センサーのキャリブレーション
+  //calibrationCompass(); // 地磁気センサーのキャリブレーション
   //CalibrationCompassManual(); // 地磁気センサーのキャリブレーション（手動設定）
 
   zoneNumber_G = 0;
@@ -127,14 +129,25 @@ void write2byte(int x) {
 }
 
 int kenchi() {
-  if (distance < 10) {
-    return 1;
+  if (distance < 30) {
+    object_count++;
+    if(object_count > 20){
+      time_Zonestart_G = millis();
+      object_count = 0;
+      return 1;
+    }
+    
   } else {
+    object_count = 0;
     return 0;
   }
 }
 
 void zone_winningacton() {
+  if(millis() - time_Zonestart_G >= 19000){
+    zoneNumber_G = 3;
+    mode_G = 0;
+  }
   switch (mode_G) {
     case 0:
       turnRight(SPEED);

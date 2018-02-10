@@ -236,7 +236,7 @@ void zone_figure_trace()
         motorL_G = speed - speedDiff;
         motorR_G = speed + speedDiff;
 
-        secflag = steadyState(8000);
+        secflag = steadyState(6500);
         if (secflag == 1) {
           BLUE_F = 2;
           mode_G = 1;
@@ -326,6 +326,8 @@ void zone_figure_trace()
 
       //ピンクをライントレース
       if (PINK_F == 1) {
+        Kp = 5.0;
+        speed = 80;
         /*
                 if ( lightNow < (lightMin4 + lightMax) / 2.0 ) // 左回転
                   speedDiff = map(lightNow, lightMin4, lightMax, -Kp * speed, Kp * speed);
@@ -341,8 +343,7 @@ void zone_figure_trace()
                   motorL_G = speed;//+ - speedDiff;
                   motorR_G = speed - speedDiff;
                 }*/
-        Kp = 5.5;
-        speed = 90;
+
 
         speedDiff = map(lightNow, lightMin2, lightMax, -Kp * speed, Kp * speed);
         motorL_G = speed + speedDiff;

@@ -103,11 +103,10 @@ void loop()
 }
 
 void timerCount() {
-  if (timeNow_G - time_Zonestart_G >= 45000 && nowcolor_G == 1 && zoneNumber_G == 3) { //60s経過
-    //zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
-    mode_G = 30;
+  if (timeNow_G - time_Zonestart_G >= 45000 && nowcolor_G == 1 && zoneNumber_G == 3) { //45s経過
+    zoneNumber_G = 0;//ゾーンナンバーを0にして次のエリアへ移動させる
+    mode_G = 0;
     time_Zonestart_G = timeNow_G;
-    delay(100);
   }
   else if (timeNow_G - time_Zonestart_G >= 50000 && zoneNumber_G == 2) {
     zoneNumber_G = 0;

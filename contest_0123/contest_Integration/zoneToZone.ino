@@ -6,7 +6,7 @@ const float color[4][3] = { // 各ゾーン（1-4)の識別色（RGB値）（各
 };
 
 const float direction_exit[3] = { // 各ゾーン(1-3)の脱出方向の角度（各自で設定）
-  107, 90, 180
+  107, 90, 200
 };
 float minDistance; // identifyZone()用のグローバル変数
 static int turn_count = 1;

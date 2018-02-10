@@ -21,7 +21,7 @@ float map_y;
 float map_px;
 float map_py;
 
-int dfc, preframe = -180,cnum[]=new int[2];//drawfindcolor
+int dfc, preframe = -180, cnum[]=new int[2];//drawfindcolor
 boolean Fflag=false;//drawfindcolor
 
 
@@ -38,7 +38,9 @@ void setup() {
   //String arduinoPort = Serial.list()[1];
   //port = new Serial(this, arduinoPort, 9600 );
   //port = new Serial(this, "COM4", 9600 ); // シリアルポート名は各自の環境に合わせて適宜指定
-  zoneNumber = 3;//テスト用
+  //port = new Serial(this, "/dev/cu.usbserial-A90176XN", 9600 );
+  port = new Serial(this, "/dev/cu.usbserial-A90174UN", 9600 );
+  zoneNumber = 0;//テスト用
   mode = 0;
 
   arfa = 100;
@@ -63,15 +65,16 @@ void setup() {
 void draw() {
   if (zoneNumber == 3) {
     //テスト
+    /*
     if (frameCount%60 == 0) {
-      mode++;
-      if (mode == 15) {
-        mode = 0;
-        hcolor += 1;
-        hcolor=hcolor%2;
-      }
-    }
-    //テスト
+     mode++;
+     if (mode == 15) {
+     mode = 0;
+     hcolor += 1;
+     hcolor=hcolor%2;
+     }
+     }
+     */
     hint(ENABLE_DEPTH_SORT); // ←追加
     //draw_3d();
     aaaaaa();
@@ -129,7 +132,7 @@ int read2byte(Serial p) {
 // 通信方式1
 void serialEvent(Serial p) { 
 
-  if ( p.available() >= 31 ) { 
+  if ( p.available() >= 31 || p.available() >= 32 ) { 
     if ( p.read() == 'H' ) {
 
       //RGB値
@@ -185,8 +188,9 @@ void serialEvent(Serial p) {
       x = read2byte(p);
       y = read2byte(p);
 
-      if (zoneNumber == 3)hcolor = p.read();
-
+      if (zoneNumber == 3) {
+        hcolor = p.read();
+      }
 
       p.clear(); // 念のためクリア
       p.write("A");
@@ -699,9 +703,9 @@ void zone_zukei() {
   strokeWeight(5);
   translate(0, 384);
   if (x != 0 && x_Prev != 0 ) {
-    map_x = map(x, -10, 150, 155, 340);
+    map_x = map(x, -15, 160, 155, 340);
     map_y = map(y, 20, -150, 140, 325);
-    map_px = map(x_Prev, -10, 155, 150, 340);
+    map_px = map(x_Prev, -15, 160, 150, 340);
     map_py = map(y_Prev, 20, -150, 140, 325);
     line(map_x+300, map_y+240, map_px+300, map_py+240);
 
@@ -1120,7 +1124,7 @@ void Draw_findcolor() {
     text("発見!!", width*0.2, height * 0.65);
     if (hcolor==0) {
       fill(0, 0, 255);
-    } else {
+    } else if (hcolor==1) {
       fill(255, 0, 0);
     }
   } else {//探索中の描画に戻す
@@ -1129,7 +1133,9 @@ void Draw_findcolor() {
   if (mode == 10 && Fflag==false) {//見つけたとき
     Fflag=true;//見つけたフラグ立てる
     preframe = frameCount;//そのときのフレームを取得
-    cnum[hcolor] += 1;
+    if (hcolor == 0 || hcolor == 1) {
+      cnum[hcolor] += 1;
+    }
   } else if (Fflag==false) {
     if (dfc==0) {
       text("探索中", width*0.2, height * 0.65);
